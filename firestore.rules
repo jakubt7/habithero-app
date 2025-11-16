@@ -8,11 +8,34 @@ service cloud.firestore {
       match /habits/{habitId} {
         allow read: if request.auth != null && request.auth.uid == userId;
         allow create: if request.auth != null && request.auth.uid == userId
-                       && request.resource.data.keys().hasOnly(['name','createdAt','targetPerDay'])
+                       && request.resource.data.keys().hasOnly([
+                         'name','createdAt','targetPerDay','category','note','reminderTime','icon'
+                       ])
                        && request.resource.data.name is string
                        && request.resource.data.name.size() > 0
-                       && request.resource.data.name.size() <= 120;
+                       && request.resource.data.name.size() <= 120
+                       && (!('category' in request.resource.data) || request.resource.data.category is string)
+                       && (!('note' in request.resource.data) || request.resource.data.note is string)
+                       && (!('reminderTime' in request.resource.data) || request.resource.data.reminderTime is string)
+                       && (!('icon' in request.resource.data) || request.resource.data.icon is string);
         allow update, delete: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /categories/{categoryId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId
+                       && request.resource.data.keys().hasOnly(['label','colorKey','createdAt'])
+                       && request.resource.data.label is string
+                       && request.resource.data.label.size() > 0
+                       && request.resource.data.label.size() <= 60
+                       && request.resource.data.colorKey in ['sky','emerald','amber','violet','rose','slate'];
+        allow update: if request.auth != null && request.auth.uid == userId
+                       && request.resource.data.keys().hasOnly(['label','colorKey'])
+                       && request.resource.data.label is string
+                       && request.resource.data.label.size() > 0
+                       && request.resource.data.label.size() <= 60
+                       && request.resource.data.colorKey in ['sky','emerald','amber','violet','rose','slate'];
+        allow delete: if request.auth != null && request.auth.uid == userId;
       }
 
       match /checkins/{dateKey} {
